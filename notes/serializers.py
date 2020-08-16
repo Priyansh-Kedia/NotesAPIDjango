@@ -4,20 +4,6 @@ from django.utils import timezone
 
 from .models import Note, Author
 
-class NotesSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Note
-        fields = ['note',]
-
-    # def save(self):
-    #     note = Note (
-    #         note=self.validated_data['note'],
-    #         date = timezone.now(),
-    #         updated= timezone.now(),
-    #     )
-    #     note.save()
-    #     print(note.note)
-
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -38,3 +24,35 @@ class UserSerializer(serializers.ModelSerializer):
 
         user.save()
         return user
+
+
+class AuthorSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = Author
+        fields = ['id','phoneNumber',]
+
+
+class NotesSerializer(serializers.ModelSerializer):
+    author = AuthorSerializer()
+
+    class Meta:
+        model = Note
+        fields = '__all__'
+
+    def save(self):
+        print(self['author']['phoneNumber'].value)
+        author = Author.objects.get(pk=self['author']['phoneNumber'].value)
+        note = Note(
+            note= self.validated_data['note'],
+            date=self['date'],
+            updated=self['updated'],
+            author = author
+        )
+        
+        note.save()
+        return note
+
+
+
+

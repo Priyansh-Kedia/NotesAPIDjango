@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from django.utils import timezone
 
 from .models import Note, Author
 from .serializers import NotesSerializer, UserSerializer
@@ -18,12 +19,20 @@ def addNote(request):
     if request.method == 'POST':
         if request.user.is_anonymous:
             return Response({"error": "Not authenticated"})
-        author = Author.objects.get(user=request.user)
-        note = Note(author=author)
-        noteSerializer = NotesSerializer(note,data=request.data)
+        author = Author.objects.get(user=request.user)  
+        data = {
+            'author': {
+                'phoneNumber': author.pk
+            },
+            'note': request.POST.get('note'),
+            'date': timezone.now(),
+            'updated': timezone.now()
+        }
+        noteSerializer = NotesSerializer(data=data)
         data = {}
         if noteSerializer.is_valid():
-            user = noteSerializer.save()
+            note = noteSerializer.save()
+            data['note'] = note.note
             data['success'] = "Note succesfully created"
         else:
             data = noteSerializer.errors
