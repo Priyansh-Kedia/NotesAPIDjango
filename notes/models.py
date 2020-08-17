@@ -76,6 +76,9 @@ class Note(models.Model):
     class Meta:
         verbose_name = 'note'
 
+    def __str__(self):
+        return self.note + str(self.account.phone)
+
 
 def pre_save_note(sender,instance,*args,**kwargs):
     print('saving')

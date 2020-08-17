@@ -5,8 +5,8 @@ from rest_framework.response import Response
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
 
-from .models import Note, Author
-from .serializers import NotesSerializer, UserSerializer
+from .models import Note, Author, Account
+from .serializers import NotesSerializer, UserSerializer, AccountSerializer
 
 
 @api_view(['GET',])
@@ -51,9 +51,9 @@ def delete_note(request, slug):
             return Response({"error": "Not authenticated"})
         note = get_object_or_404(Note, slug=slug)
         user = request.user    
-        author = Author.objects.get(user=user)
+        account = Account.objects.get(phone=user.phone)
         if note:
-            if note.author.user == user:
+            if note.account == account:
                 task = note.delete()
                 if task:
                     return Response({'success':'deleted'})
@@ -62,42 +62,31 @@ def delete_note(request, slug):
             else:
                 return Response({'error':'You are not authorized to edit this note'})
 
-
 @api_view(['POST',])
-def addNote(request):
-    if request.method == 'POST':
+def addNewNote(request):
+    if request.method == "POST":
         if request.user.is_anonymous:
-            return Response({"error": "Not authenticated"})
-        author = Author.objects.get(user=request.user)  
-        data = {
-            'author': {
-                'phoneNumber': author.pk
-            },
-            'note': request.POST.get('note'),
-            'date': timezone.now(),
-            'updated': timezone.now()
-        }
-        noteSerializer = NotesSerializer(data=data)
-        data = {}
-        if noteSerializer.is_valid():
-            note = noteSerializer.save()
-            data['note'] = note.note
-            data['success'] = "Note succesfully created"
+            return Response({'error':'Authetincation credentials not provided'})
         else:
-            data = noteSerializer.errors
-        return Response(data)
-
+            account = get_object_or_404(Account, phone=request.user.phone)
+            note = Note(account = account)
+            noteSerializer = NotesSerializer(note,request.data)
+            if noteSerializer.is_valid():
+                noteSerializer.save()
+                return Response({'success':'note saved succesfully'})
+            else:
+                return Response(noteSerializer.errors)
+            return Response({'user':request.user.phone})
 
 @api_view(['POST',])
-def addNewUser(request):
+def addAccount(request):
+    print(request.data)
     if request.method == 'POST':
-        userSerializer = UserSerializer(data=request.data)
+        accountSerializer = AccountSerializer(data=request.data)
         data = {}
-        if userSerializer.is_valid():
-            user = userSerializer.save()
-            data['username'] = user.first_name
-            return Response(data)
+        if accountSerializer.is_valid():
+            accountSerializer.save()
+            data['success'] = 'Account created succesfully'
         else:
-            data = userSerializer.errors
-            return Response(data)
-
+            data['error'] = accountSerializer.errors
+        return Response(data)
