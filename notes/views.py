@@ -84,14 +84,30 @@ def addNewNote(request):
 def addAccount(request):
     print(request.data)
     if request.method == 'POST':
-        accountSerializer = AccountSerializer(data=request.data)
-        data = {}
-        if accountSerializer.is_valid():
-            accountSerializer.save()
-            data['success'] = 'Account created succesfully'
+        phoneOTP = None
+        try:
+            phoneOTP = PhoneOTP.objects.get(phone=request.POST.get('phone'))
+        except PhoneOTP.DoesNotExist:
+            pass
+
+        if phoneOTP:
+            if  not phoneOTP.verified:
+                return Response({'error':'Please verify the phone number. OTP sent'})
+            else:
+                accountSerializer = AccountSerializer(data=request.data)
+                data = {}
+                if accountSerializer.is_valid():
+                    accountSerializer.save()
+                    data['success'] = 'Account created succesfully'
+                    phoneOTP.delete()
+                    return Response(data=data)
+                else:
+                    data['error'] = accountSerializer.errors
+                    return Response(data)
         else:
-            data['error'] = accountSerializer.errors
-        return Response(data)
+            return Response({'error':'Please verify the phone number.'})
+
+       
 
 @api_view(['POST',])
 def registerPhone(request):
