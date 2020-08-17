@@ -57,6 +57,12 @@ class Account(AbstractBaseUser):
     def has_module_perms(self,app_label):
         return True
 
+class PhoneOTP(models.Model):
+    phone = models.IntegerField()
+    verified = models.BooleanField(default=False)
+    timestamp = models.DateTimeField(auto_now=True)
+    otp = models.IntegerField(blank=True, null=True)
+
 class Note(models.Model):
     note = models.CharField(max_length=300)
     date = models.DateTimeField(auto_now_add=True)

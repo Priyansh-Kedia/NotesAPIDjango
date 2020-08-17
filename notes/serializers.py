@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.utils import timezone
 
-from .models import Note, Account
+from .models import Note, Account, PhoneOTP
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -49,5 +49,8 @@ class NotesSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-
+class PhoneOTPSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PhoneOTP
+        fields = '__all__'
 
