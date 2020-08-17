@@ -47,6 +47,8 @@ INSTALLED_APPS = [
    
 ]
 
+ROOT_URLCONF = 'notesAPI.urls'
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -58,7 +60,7 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'notesAPI.urls'
-
+AUTH_USER_MODEL = 'notes.Account'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
