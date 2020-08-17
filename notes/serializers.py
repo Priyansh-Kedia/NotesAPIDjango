@@ -41,7 +41,6 @@ class NotesSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def save(self):
-        print(self['author']['phoneNumber'].value)
         author = Author.objects.get(pk=self['author']['phoneNumber'].value)
         note = Note(
             note= self.validated_data['note'],
