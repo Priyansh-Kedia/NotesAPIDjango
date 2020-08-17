@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from .models import Note,Author, Account
+from .models import Note, Account
 
 class NoteAdmin(admin.ModelAdmin):
     readonly_fields = ['date','updated']
@@ -13,6 +13,5 @@ class AccountAdmin(UserAdmin):
     fieldsets = ()
        
 
-admin.site.register(Author)
 admin.site.register(Note, NoteAdmin) 
 admin.site.register(Account, AccountAdmin)

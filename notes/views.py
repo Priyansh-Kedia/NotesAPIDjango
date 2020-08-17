@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
 
-from .models import Note, Author, Account
+from .models import Note, Account
 from .serializers import NotesSerializer, UserSerializer, AccountSerializer
 
 

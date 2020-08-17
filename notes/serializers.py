@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.utils import timezone
 
-from .models import Note, Author, Account
+from .models import Note, Account
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -42,31 +42,11 @@ class AccountSerializer(serializers.ModelSerializer):
         account.save()
         return account
 
-
-class AuthorSerializer(serializers.ModelSerializer):
-    
-    class Meta:
-        model = Author
-        fields = ['id','phoneNumber',]
-
-
 class NotesSerializer(serializers.ModelSerializer):
- #   author = AuthorSerializer()
 
     class Meta:
         model = Note
         fields = '__all__'
-
-    # def save(self):
-    #    # author = Author.objects.get(pk=self['author']['phoneNumber'].value)
-    #     note = Note(
-    #         note= self.validated_data['note'],
-    #         date=self['date'],
-    #         updated=self['updated']
-    #     )
-        
-    #     note.save()
-    #     return note
 
 
 

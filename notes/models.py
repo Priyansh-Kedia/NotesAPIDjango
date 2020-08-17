@@ -57,15 +57,6 @@ class Account(AbstractBaseUser):
     def has_module_perms(self,app_label):
         return True
 
-
-class Author(models.Model):
-    user = models.OneToOneField(Account,on_delete=models.CASCADE,null=True,blank=True, unique=False)
-    phoneNumber = models.IntegerField(null=True,blank=True)
-
-    def __str__(self):
-        return str(self.phoneNumber)
-
-
 class Note(models.Model):
     note = models.CharField(max_length=300)
     date = models.DateTimeField(auto_now_add=True)
