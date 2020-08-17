@@ -6,6 +6,7 @@ from django.utils import timezone
 from django.shortcuts import get_object_or_404
 
 from random import randint
+import requests
 
 from .models import Note, Account, PhoneOTP
 from .serializers import NotesSerializer, UserSerializer, AccountSerializer, PhoneOTPSerializer
@@ -133,6 +134,8 @@ def registerPhone(request):
             else:
                 otp = randint(100000,999999)
                 PhoneOTP.objects.create(phone=request.POST.get('phone'), timestamp=timezone.now(), otp=otp)
+                url = "https://2factor.in/API/V1/{api_key}/SMS/+91{phone_no}/{custom_otp_val}".format(api_key="3fbfd8c1-e0b5-11ea-9fa5-0200cd936042",phone_no=request.POST.get('phone'),custom_otp_val=otp)
+                requests.request("GET", url)
                 return Response({'otp':otp})
 
 
