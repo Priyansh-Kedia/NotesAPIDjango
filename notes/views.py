@@ -5,8 +5,10 @@ from rest_framework.response import Response
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
 
-from .models import Note, Account
-from .serializers import NotesSerializer, UserSerializer, AccountSerializer
+from random import randint
+
+from .models import Note, Account, PhoneOTP
+from .serializers import NotesSerializer, UserSerializer, AccountSerializer, PhoneOTPSerializer
 
 
 @api_view(['GET',])
@@ -90,3 +92,51 @@ def addAccount(request):
         else:
             data['error'] = accountSerializer.errors
         return Response(data)
+
+@api_view(['POST',])
+def registerPhone(request):
+    if request.method == 'POST':
+        account = None
+        try:
+            account = Account.objects.get(phone=request.POST.get('phone'))
+        except Account.DoesNotExist:
+            pass
+        if account:
+            return Response({'error':'You have already registered'})
+        else:
+            phoneOTP = None
+            try:
+                phoneOTP = PhoneOTP.objects.get(phone=request.POST.get('phone'))
+            except PhoneOTP.DoesNotExist:
+                pass
+
+            if phoneOTP and not phoneOTP.verified:
+                return Response({'error':'OTP already sent. Please verify'})
+            elif phoneOTP and phoneOTP.verified:
+                return Response({'error':'Number already verified, please register'})
+            else:
+                otp = randint(100000,999999)
+                PhoneOTP.objects.create(phone=request.POST.get('phone'), timestamp=timezone.now(), otp=otp)
+                return Response({'otp':otp})
+
+
+@api_view(['POST',])
+def verifyPhone(request):
+    if request.method == 'POST':
+        phone = request.POST.get('phone')
+        otp = request.POST.get('otp')
+        phoneOTP = None
+        try:
+            phoneOTP = PhoneOTP.objects.get(phone=phone)
+        except PhoneOTP.DoesNotExist:
+            pass
+
+        if phoneOTP:
+            if otp == str(phoneOTP.otp):
+                phoneOTP.verified = True
+                phoneOTP.save()
+                return Response({'success':'OTP verified'})
+            else:
+                return Response({'error':'OTP not correct'})
+        else:
+            return Response({'error':'Phone number does not exist'})
