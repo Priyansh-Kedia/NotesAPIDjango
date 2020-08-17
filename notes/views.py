@@ -34,9 +34,9 @@ def update_note(request,slug):
             return Response({"error": "Not authenticated"})
         note = get_object_or_404(Note, slug=slug)
         user = request.user    
-        author = Author.objects.get(user=user)
+        account = Account.objects.get(phone=user.phone)
         if note:
-            if note.author.user == user:
+            if note.account == account:
                 note.note = request.POST.get('note')
                 note.save()
                 return Response({'success':'updated'})
