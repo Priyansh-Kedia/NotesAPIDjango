@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import User
 from django.db.models.signals import pre_save
-from django.core.validators import MaxLengthValidator, int_list_validator, MinLengthValidator
+from django.core.validators import MinValueValidator, int_list_validator, MaxValueValidator
 
 from .utils import unique_slug_generator
 
@@ -34,7 +34,7 @@ class AccountManager(BaseUserManager):
         return user
 
 class Account(AbstractBaseUser):
-    phone = models.IntegerField(unique=True)
+    phone = models.IntegerField(unique=True, validators=[MaxValueValidator(9999999999), MinValueValidator(1000000000)])
     username = models.CharField(max_length=30, unique=True)
     first_login = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
@@ -58,7 +58,7 @@ class Account(AbstractBaseUser):
         return True
 
 class PhoneOTP(models.Model):
-    phone = models.IntegerField()
+    phone = models.IntegerField( validators=[MaxValueValidator(9999999999), MinValueValidator(1000000000)])
     verified = models.BooleanField(default=False)
     timestamp = models.DateTimeField(auto_now=True)
     otp = models.IntegerField(blank=True, null=True)
@@ -77,7 +77,7 @@ class Note(models.Model):
         verbose_name = 'note'
 
     def __str__(self):
-        return self.note + str(self.account.phone)
+        return "Note: {note}, phone: {phone}".format(note=self.note, phone = self.account.phone)
 
 
 def pre_save_note(sender,instance,*args,**kwargs):
