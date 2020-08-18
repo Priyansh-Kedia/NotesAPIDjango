@@ -114,6 +114,7 @@ def addAccount(request):
 def registerPhone(request):
     if request.method == 'POST':
         account = None
+        phoneOTPSerializer = PhoneOTPSerializer(data=request.data)
         try:
             account = Account.objects.get(phone=request.POST.get('phone'))
         except Account.DoesNotExist:
@@ -133,8 +134,12 @@ def registerPhone(request):
                 return Response({'error':'Number already verified, please register'})
             else:
                 otp = randint(100000,999999)
+                if not phoneOTPSerializer.is_valid():
+                    print(phoneOTPSerializer.errors)
+                    return Response({'error':'The entered phone number is not of 10 digits'})
                 PhoneOTP.objects.create(phone=request.POST.get('phone'), timestamp=timezone.now(), otp=otp)
-                url = "https://2factor.in/API/V1/{api_key}/SMS/+91{phone_no}/{custom_otp_val}".format(api_key="3fbfd8c1-e0b5-11ea-9fa5-0200cd936042",phone_no=request.POST.get('phone'),custom_otp_val=otp)
+                response = url = "https://2factor.in/API/V1/{api_key}/SMS/+91{phone_no}/{custom_otp_val}".format(api_key="3fbfd8c1-e0b5-11ea-9fa5-0200cd936042",phone_no=request.POST.get('phone'),custom_otp_val=otp)
+                print(response)
                 requests.request("GET", url)
                 return Response({'otp':otp})
 

@@ -52,5 +52,5 @@ class NotesSerializer(serializers.ModelSerializer):
 class PhoneOTPSerializer(serializers.ModelSerializer):
     class Meta:
         model = PhoneOTP
-        fields = '__all__'
+        fields = ['phone']
 
