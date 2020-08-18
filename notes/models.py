@@ -63,6 +63,9 @@ class PhoneOTP(models.Model):
     timestamp = models.DateTimeField(auto_now=True)
     otp = models.IntegerField(blank=True, null=True)
 
+    def __str__(self):
+        return "Phone: {phone}, Verified: {verified}".format(phone=self.phone,verified=self.verified)
+
 class Note(models.Model):
     note = models.CharField(max_length=300)
     date = models.DateTimeField(auto_now_add=True)
