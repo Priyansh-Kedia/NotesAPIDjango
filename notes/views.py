@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework import status
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
 
@@ -28,13 +29,13 @@ def get_note_by_slug(request,slug):
             return Response(noteSerializer.data)
         except Note.DoesNotExist:
             data = {'error':'No such note exists'}
-            return Response(data)
+            return Response(data, status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['PUT',])
 def update_note(request,slug):
     if request.method == 'PUT':
         if request.user.is_anonymous:
-            return Response({"error": "Not authenticated"})
+            return Response({"error": "Not authenticated"},status=status.HTTP_401_UNAUTHORIZED)
         note = get_object_or_404(Note, slug=slug)
         user = request.user    
         account = Account.objects.get(phone=user.phone)
@@ -42,16 +43,16 @@ def update_note(request,slug):
             if note.account == account:
                 note.note = request.POST.get('note')
                 note.save()
-                return Response({'success':'updated'})
+                return Response({'success':'updated'},status=status.HTTP_200_OK)
             else:
-                return Response({'error':'You are not authorized to edit this note'})
+                return Response({'error':'You are not authorized to edit this note'},status=status.HTTP_401_UNAUTHORIZED)
     
 
 @api_view(['DELETE',])
 def delete_note(request, slug):
     if request.method == 'DELETE':
         if request.user.is_anonymous:
-            return Response({"error": "Not authenticated"})
+            return Response({"error": "Not authenticated"},status=status.HTTP_401_UNAUTHORIZED)
         note = get_object_or_404(Note, slug=slug)
         user = request.user    
         account = Account.objects.get(phone=user.phone)
@@ -59,27 +60,27 @@ def delete_note(request, slug):
             if note.account == account:
                 task = note.delete()
                 if task:
-                    return Response({'success':'deleted'})
+                    return Response({'success':'deleted'},status=status.HTTP_200_OK)
                 else:
-                    return Response({'error': 'A problem occured'})
+                    return Response({'error': 'A problem occured'},status=status.HTTP_400_BAD_REQUEST)
             else:
-                return Response({'error':'You are not authorized to edit this note'})
+                return Response({'error':'You are not authorized to edit this note'},status=status.HTTP_401_UNAUTHORIZED)
 
 @api_view(['POST',])
 def addNewNote(request):
     if request.method == "POST":
         if request.user.is_anonymous:
-            return Response({'error':'Authetincation credentials not provided'})
+            return Response({'error':'Authetincation credentials not provided'}, status=status.HTTP_401_UNAUTHORIZED)
         else:
             account = get_object_or_404(Account, phone=request.user.phone)
             note = Note(account = account)
             noteSerializer = NotesSerializer(note,request.data)
             if noteSerializer.is_valid():
                 noteSerializer.save()
-                return Response({'success':'note saved succesfully'})
+                return Response({'success':'note saved succesfully'},status=status.HTTP_200_OK)
             else:
-                return Response(noteSerializer.errors)
-            return Response({'user':request.user.phone})
+                return Response(noteSerializer.errors,status=status.HTTP_400_BAD_REQUEST)
+            return Response({'user':request.user.phone},status=status.HTTP_201_CREATED)
 
 @api_view(['POST',])
 def addAccount(request):
@@ -93,7 +94,7 @@ def addAccount(request):
 
         if phoneOTP:
             if  not phoneOTP.verified:
-                return Response({'error':'Please verify the phone number. OTP sent'})
+                return Response({'error':'Please verify the phone number. OTP sent'},status=status.HTTP_400_BAD_REQUEST)
             else:
                 accountSerializer = AccountSerializer(data=request.data)
                 data = {}
@@ -104,9 +105,9 @@ def addAccount(request):
                     return Response(data=data)
                 else:
                     data['error'] = accountSerializer.errors
-                    return Response(data)
+                    return Response(data,status=status.HTTP_401_UNAUTHORIZED)
         else:
-            return Response({'error':'Please verify the phone number.'})
+            return Response({'error':'Please verify the phone number.'},status=status.HTTP_400_BAD_REQUEST)
 
        
 
@@ -120,7 +121,7 @@ def registerPhone(request):
         except Account.DoesNotExist:
             pass
         if account:
-            return Response({'error':'You have already registered'})
+            return Response({'error':'You have already registered'},status=status.HTTP_400_BAD_REQUEST)
         else:
             phoneOTP = None
             try:
@@ -129,19 +130,19 @@ def registerPhone(request):
                 pass
 
             if phoneOTP and not phoneOTP.verified:
-                return Response({'error':'OTP already sent. Please verify'})
+                return Response({'error':'OTP already sent. Please verify'},status=status.HTTP_400_BAD_REQUEST)
             elif phoneOTP and phoneOTP.verified:
-                return Response({'error':'Number already verified, please register'})
+                return Response({'error':'Number already verified, please register'},status=status.HTTP_400_BAD_REQUEST)
             else:
                 otp = randint(100000,999999)
                 if not phoneOTPSerializer.is_valid():
                     print(phoneOTPSerializer.errors)
-                    return Response({'error':'The entered phone number is not of 10 digits'})
+                    return Response({'error':'The entered phone number is not of 10 digits'},status=status.HTTP_400_BAD_REQUEST)
                 PhoneOTP.objects.create(phone=request.POST.get('phone'), timestamp=timezone.now(), otp=otp)
                 response = url = "https://2factor.in/API/V1/{api_key}/SMS/+91{phone_no}/{custom_otp_val}".format(api_key="3fbfd8c1-e0b5-11ea-9fa5-0200cd936042",phone_no=request.POST.get('phone'),custom_otp_val=otp)
                 print(response)
                 requests.request("GET", url)
-                return Response({'otp':otp})
+                return Response({'otp':otp},status=status.HTTP_200_OK)
 
 
 @api_view(['POST',])
@@ -159,8 +160,8 @@ def verifyPhone(request):
             if otp == str(phoneOTP.otp):
                 phoneOTP.verified = True
                 phoneOTP.save()
-                return Response({'success':'OTP verified'})
+                return Response({'success':'OTP verified'},status=status.HTTP_200_OK)
             else:
-                return Response({'error':'OTP not correct'})
+                return Response({'error':'OTP not correct'},status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response({'error':'Phone number does not exist'})
+            return Response({'error':'Phone number does not exist'},status=status.HTTP_400_BAD_REQUEST)
