@@ -15,7 +15,7 @@ class AccountAdmin(UserAdmin):
     fieldsets = ()
 
 class PhoneOTPAdmin(admin.ModelAdmin):
-    list_display = ('phone','otp','verified')
+    list_display = ('phone','otp','verified','timestamp')
        
 
 admin.site.register(Note, NoteAdmin) 
